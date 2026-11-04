@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BLOODLINE: NOCTURNE — 87 Production Studio</title>
+<style>
+  :root{
+    --bg:#080505;
+    --panel:#100b0b;
+    --panel2:#1a1212;
+    --gold:#c9a227;
+    --gold-light:#e8d48a;
+    --crimson:#7a1414;
+    --crimson-dark:#360606;
+    --rose:#a42626;
+    --text:#eadcc8;
+    --text-dim:#b8a890;
+    --border:#3d2a2a;
+    --ink:#2b1818;
+    --green:#6f9a5e;
+    --red:#9b2c2c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Palatino Linotype','Book Antiqua','Palatino Serif',Georgia,serif;overflow:hidden;touch-action:manipulation;-webkit-font-smoothing:antialiased;}
+  body{position:relative;}
+  #app{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+
+  /* ============ gothic stage background (main screen) ============ */
+  .stage{position:absolute;inset:0;overflow:hidden;z-index:0;
+    background:radial-gradient(circle at 50% 30%, #1a0a0a 0%, #060303 55%, #020101 100%);
+  }
+  .moon{position:absolute;top:8%;left:50%;transform:translateX(-50%);width:34vh;height:34vh;background:radial-gradient(circle at 35% 35%, #b71c1c, transparent 70%);border-radius:50%;box-shadow:0 0 40px #7a1414, inset 0 0 60px #c41e1e;opacity:.85;filter:blur(6px);animation:pulse 6s ease-in-out infinite;}
+  .moon::after{content:'';position:absolute;inset:12%;border-radius:50%;border:2px solid rgba(201,162,39,.35);box-shadow:inset 0 0 15px rgba(201,162,39,.2);}
+  .fog{position:absolute;inset:0;background:
+    linear-gradient(transparent, rgba(60,20,20,.35)),
+    linear-gradient(transparent, rgba(20,10,10,.45));
+  opacity:.6;pointer-events:none;}
+  .candle{position:absolute;bottom:6%;width:9px;height:30px;background:linear-gradient(#eee,#999);border-radius:2px;opacity:.9;animation:flicker 3s ease-in-out infinite;box-shadow:0 0 12px #ffd86b;}
+  .candle::after{content:'';position:absolute;top:-16px;left:-8px;width:25px;height:25px;background:radial-gradient(circle,#ffd840 20%, rgba(255,216,64,0) 70%);border-radius:50%;opacity:0;animation:flame 2.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.85}50%{transform:translateX(-50%) scale(1.06);opacity:1}}
+  @keyframes flicker{0%,100%{opacity:.92}50%{opacity:.62}}
+  @keyframes flame{0%,100%{transform:scale(1);opacity:0}50%{transform:scale(1.15);opacity:1}}
+
+  .screen{display:none;position:relative;z-index:10;height:100%;width:100%;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,10px) env(safe-area-inset-bottom,0) env(safe-area-inset-left,10px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .screen.active{display:block;}
+  .screen section{margin-bottom:10px;}
+
+  /* header bar */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:linear-gradient(180deg,rgba(0,0,0,.75),transparent);position:sticky;top:0;z-index:30;backdrop-filter:blur(4px);border-bottom:1px solid var(--border);}
+  .hdr .title{font-size:15px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;font-weight:bold;text-shadow:0 0 8px rgba(201,162,39,.35);}
+  .hdr .sub{font-size:11px;color:var(--text-dim);letter-spacing:1px;}
+  .btn-back{background:var(--panel2);border:1px solid var(--border);color:var(--gold);padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer;}
+  .btn-back:active{background:var(--crimson-dark);}
+
+  /* panels */
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;margin:8px 0;box-shadow:0 4px 18px rgba(0,0,0,.55);}
+  .panel h2{margin:0 0 8px;font-size:15px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px;}
+  .panel h3{margin:8px 0 6px;font-size:13px;color:var(--gold-light);letter-spacing:1px;}
+
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .col{flex:1;min-width:120px;}
+  label{font-size:12px;color:var(--text-dim);display:block;margin:4px 0 2px;letter-spacing:.5px;}
+  input,select,textarea{width:100%;background:#0a0606;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font:inherit;font-size:14px;}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+
+  /* buttons */
+  .btn{display:inline-block;width:100%;background:linear-gradient(180deg,#1e1212,#100a0a);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;text-align:center;cursor:pointer;font:inherit;font-size:14px;margin:6px 0;position:relative;overflow:hidden;touch-action:manipulation;}
+  .btn:active{background:var(--crimson-dark);border-color:var(--gold);transform:translateY(1px);}
+  .btn.primary{border-color:var(--gold);color:var(--gold-light);box-shadow:0 0 14px rgba(201,162,39,.25);}
+  .btn.primary:active{background:var(--crimson);color:#fff;}
+  .btn.danger{border-color:var(--red);color:#f4c2c2;}
+  .btn.danger:active{background:#2e0a0a;color:#fff;}
+  .btn.secondary{border-color:var(--crimson);color:#e2b4b4;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.full{width:100%;}
+  .btn.small{padding:6px 10px;font-size:12px;}
+  .btngrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .btngrid-3{grid-template-columns:repeat(3,1fr);}
+
+  /* stat chips */
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 2px;}
+  .stat{flex:1;min-width:78px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;}
+  .stat .v{display:block;font-size:17px;font-weight:bold;color:var(--gold-light);letter-spacing:1px;}
+  .stat .l{display:block;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;}
+  .stat .bar{height:4px;background:#261414;margin-top:4px;border-radius:2px;overflow:hidden;}
+  .stat .bar span{display:block;height:100%;background:var(--gold);width:60%;}
+
+  .portrait-wrap{position:relative;display:inline-block;margin:0 auto 8px;}
+  .portrait{width:86px;height:106px;border:2px solid var(--border);border-radius:10px;background:#0a0606;display:block;overflow:hidden;box-shadow:0 0 20px rgba(0,0,0,.6);}
+  .portrait img{width:100%;height:100%;object-fit:cover;display:block;}
+  .portrait .label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:var(--gold-light);font-size:10px;padding:2px 4px;text-align:center;letter-spacing:1px;}
+  .side-badge{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:var(--gold);color:#000;font:bold 9px sans-serif;display:flex;align-items:center;justify-content:center;}
+
+  /* creation */
+  .gender{display:flex;gap:10px;}
+  .gender .opt{flex:1;border:2px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;cursor:pointer;color:var(--text-dim);background:var(--panel2);position:relative;}
+  .gender .opt.selected{border-color:var(--gold);color:var(--gold-light);background:rgba(201,162,39,.1);}
+  .gender .opt .portrait{width:70px;height:90px;margin:0 auto 6px;}
+  .cre-col{display:flex;gap:10px;flex-wrap:wrap;}
+  .cre-col > div{flex:1;min-width:140px;}
+
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--border);color:var(--text-dim);padding:3px 8px;border-radius:12px;font-size:11px;margin:2px 4px 2px 0;cursor:pointer;user-select:none;}
+  .tag.active{border-color:var(--gold);color:var(--gold-light);}
+
+  .hint{font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.4;}
+
+  /* lists */
+  .list{display:flex;flex-direction:column;gap:6px;}
+  .card{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:10px;}
+  .card .mini{width:42px;height:54px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:#0a0606;flex-shrink:0;}
+  .card .mini img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card .info{flex:1;min-width:0;}
+  .card .name{font-weight:bold;color:var(--gold-light);font-size:14px;}
+  .card .sub{font-size:11px;color:var(--text-dim);line-height:1.3;}
+  .card .acts{display:flex;gap:6px;}
+  .card .acts .btn{width:auto;padding:4px 8px;font-size:11px;margin:0;}
+
+  .log{font-size:11.5px;color:var(--text-dim);background:#090505;border:1px solid var(--border);border-radius:8px;padding:8px 10px;line-height:1.5;max-height:180px;overflow-y:auto;}
+  .log .entry{margin:3px 0;padding-bottom:3px;border-bottom:1px solid #1a1010;}
+  .log .entry b{color:var(--gold-light);}
+
+  .roomgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .room{background:var(--panel2);border:1px solid var(--border);border-radius:10px;height:150px;position:relative;overflow:hidden;cursor:pointer;display:flex;align-items:flex-end;padding:10px;}
+  .room:active{filter:brightness(1.15);}
+  .room .rname{position:absolute;top:10px;left:10px;right:10px;color:var(--gold-light);font-weight:bold;font-size:14px;letter-spacing:1px;text-shadow:0 0 8px #000;}
+  .room .rdesc{position:relative;z-index:2;font-size:11px;color:#cbbca8;line-height:1.4;color:var(--text-dim);}
+  .roomart{position:absolute;inset:0;opacity:.35;pointer-events:none;background-repeat:no-repeat;background-position:center;background-size:cover;}
+
+  input[type="range"]{width:100%;accent-color:var(--gold);cursor:pointer;}
+  .sw{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1010;}
+  .sw .t{font-size:13px;color:var(--text);}
+  .toggle{position:relative;width:44px;height:24px;background:#261414;border-radius:12px;cursor:pointer;}
+  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:var(--gold-light);border-radius:50%;transition:transform .2s;}
+  .toggle.on{background:var(--crimson);}
+  .toggle.on::after{transform:translateX(20px);}
+
+  #toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#100a0a;border:1px solid var(--gold);color:var(--gold-light);padding:8px 14px;border-radius:8px;font-size:12px;letter-spacing:.5px;opacity:0;transition:opacity .3s;z-index:60;pointer-events:none;box-shadow:0 0 20px rgba(201,162,39,.2);}
+  #toast.show{opacity:1;}
+
+  .hide{display:none !important;}
+  .center{text-align:center;}
+  .nowrap{white-space:nowrap;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="stage">
+    <div class="moon"></div><div class="fog"></div>
+    <div class="candle" style="left:8%"></div><div class="candle" style="left:22%;animation-delay:.6s"></div>
+    <div class="candle" style="left:36%;animation-delay:1.2s"></div><div class="candle" style="left:50%;animation-delay:1.8s"></div>
+    <div class="candle" style="left:64%;animation-delay:2.4s"></div><div class="candle" style="left:78%;animation-delay:3s"></div>
+    <div class="candle" style="left:92%;animation-delay:3.6s"></div>
+  </div>
+  <div id="root"></div>
+  <div id="toast"></div>
+</div>
+
+<script>
+/* ======================================================================
+   BLOODLINE: NOCTURNE — 87 Production Studio
+   Single-file gothic vampire dynasty RPG. localStorage persistence.
+   ====================================================================== */
+(function(){
+  const $ = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  const on=(ev,sel,fn)=>{$('#app').addEventListener(ev,e=>{let t=e.target.closest(sel);if(t)fn(t,e);});};
+  const toast=(m,c=2200)=>{const el=$('#toast');el.textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),c);};
+  const uid=()=>'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  const chance=p=>Math.random()<p;
+  const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h+s.charCodeAt(i))|0;return h;};
+
+  /* ---------------------------------------------------------------- data */
+  const HOUSES=['Nocturne','Draven','Vespera','Malakai','Thorne','Sanguis','Blackthorn','Morvayne'];
+  const TITLES_MALE=['Count','Duke','Prince','Lord','Baron','Marquis','Archon'];
+  const TITLES_FEMALE=['Countess','Duchess','Princess','Lady','Baroness','Marchioness','Archoness'];
+  const HAIR=['raven-black','crimson','ashen','chestnut','obsidian','moon-silver','deep plum','burnt umber'];
+  const EYES=['crimson','amber','void-black','ice silver','emerald','violet','gold','hazel'];
+  const SKIN=['alabaster','porcelain','olive','dusky','ebony','pale moon','sallow','rose-pale'];
+  const PERSONALITY=['Ambitious','Cruel','Kind','Cunning','Honorable','Seductive','Stoic','Passionate','Secretive','Zealous'];
+  const POWERS=['Blood Sorcery','Shadow Meld','Mind Thrall','Necromancy','Beast Tongue','Glamour','Blood Ward','Corporeal Fade'];
+
+  const NPC_FIRST_MALE=['Cassian','Dorian','Malcolm','Silas','Virgil','Leandro','Octavian','Renald'];
+  const NPC_FIRST_FEMALE=['Isolde','Cordelia','Seraphine','Elowen','Morgana','Ophelia','Lysandra','Genevieve'];
+  const NPC_LAST=['Draven','Nocturne','Vespera','Blackthorn','Malakai','Morvayne','Thorne','Sanguis'];
+  const FACTION_NAMES={
+    house:['House Draven','House Vespera','House Malakai','House Thorne','House Sanguis','House Blackthorn'],
+    pack:['Ironclaw Pack','Bloodhowl Pack','Ashenmoon Pack','Dreadfang Pack'],
+    coven:['Obsidian Coven','Thornwitch Coven','Moonbane Coven','Veil Coven'],
+    village:['Hollowbrook','Duskhollow','Crimsonfield','Widow\'s Reach','Blackmire','Fellwick'],
+    hunter:['The Dawn Inquisition','Silverglaive Order','Ashen Stake','Red Veil Hunters']
+  };
+
+  /* ---------------------------------------------------------------- art */
+  function portraitSVG(c){
+    const gender=c.gender||'male';
+    const hc=c.hair||'raven-black'; const ec=c.eyes||'crimson'; const sc=c.skin||'alabaster';
+    const age=c.age||30; const beard=gender==='male'&&c.beard;
+    const hairCol={ 'raven-black':'#1a1212', crimson:'#7a1414', ashen:'#9aa0a6', chestnut:'#6b3e22',
+      obsidian:'#0d0a0a','moon-silver':'#cfd8e2','deep plum':'#5a2e5a','burnt umber':'#5c3a22' }[hc]||'#1a1212';
+    const eyeCol={ crimson:'#b91c1c','amber':'#d99a1c','void-black':'#111','ice silver':'#cfe2f3',emerald:'#5cb85c',violet:'#9b59b6',gold:'#e8c547',hazel:'#8d6e45' }[ec]||'#b91c1c';
+    const skinCol={ alabaster:'#f0e6e2',porcelain:'#e8ddd9',olive:'#c7c3a8',dusky:'#b59a8a',ebony:'#4a342e',
+      'pale moon':'#e4eaf2',sallow:'#cfc7a8','rose-pale':'#ead8d8' }[sc]||'#f0e6e2';
+    const w=200,h=260,cx=100,cy=118;
+    const hairH=gender==='female'?78:46; const hairBottom=cy-12+hairH;
+    let svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'+
+      '<defs><radialGradient id="g" cx="50%" cy="35%" r="60%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#d8cbbd"/></radialGradient>'+
+      '<filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="1" dy="2" result="off"/><feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="off"/></feMerge></filter></defs>';
+    // shoulders
+    svg+='<ellipse cx="'+cx+'" cy="'+(cy+86)+'" rx="78" ry="40" fill="'+skinCol+'" filter="url(#s)"/>';
+    // neck
+    svg+='<path d="M '+(cx-16)+' '+(cy-10)+' L '+(cx-24)+' '+ (cy+30)+' L '+(cx+24)+' '+(cy+30)+' L '+(cx+16)+' '+(cy-10)+' Z" fill="'+skinCol+'" filter="url(#s)"/>';
+    // face
+    svg+='<path d="M '+(cx-42)+' '+(cy-34)+' Q '+cx+' '+(cy-56)+' '+(cx+42)+' '+(cy-34)+' L '+(cx+42)+' '+(cy+56)+' Q '+cx+' '+(cy+74)+' '+(cx-42)+' '+(cy+56)+' Z" fill="url(#g)" filter="url(#s)"/>';
+    // hair (simple cap + sides)
+    svg+='<path d="M '+(cx-52)+' '+(cy-24)+' Q '+cx+' '+(cy-72-hairH/2)+' '+(cx+52)+' '+(cy-24)+' L '+(cx+56)+' '+hairBottom+' L '+(cx-56)+' '+hairBottom+' Z" fill="'+hairCol+'" filter="url(#s)"/>';
+    svg+='<path d="M '+(cx-60)+' '+(cy-8)+' Q '+(cx-30)+' '+(cy-18)+' '+(cx-30)+' '+hairBottom+' L '+(cx-34)+' '+hairBottom+' Z" fill="'+hairCol+'"/>';
+    svg+='<path d="M '+(cx+60)+' '+(cy-8)+' Q '+(cx+30)+' '+(cy-18)+' '+(cx+30)+' '+hairBottom+' L '+(cx+34)+' '+hairBottom+' Z" fill="'+hairCol+'"/>';
+    if(gender==='female'){ svg+='<path d="M '+cx+' '+(cy-72)+' Q '+(cx+60)+' '+(cy-40)+' '+(cx+72)+' '+hairBottom+' L '+(cx+66)+' '+hairBottom+' L '+(cx+56)+' '+hairBottom+' Z" fill="'+hairCol+'"/>'+
+      '<path d="M '+cx+' '+(cy-72)+' Q '+(cx-60)+' '+(cy-40)+' '+(cx-72)+' '+hairBottom+' L '+(cx-66)+' '+hairBottom+' L '+(cx-56)+' '+hairBottom+' Z" fill="'+hairCol+'"/>'; }
+    // eyebrows
+    svg+='<path d="M '+(cx-24)+' '+(cy-10)+' Q '+(cx-12)+' '+(cy-16)+' '+(cx-2)+' '+(cy-10)+' fill="none" stroke="'+hairCol+'" stroke-width="3" stroke-linecap="round"/>';
+    svg+='<path d="M '+(cx+2)+' '+(cy-10)+' Q '+(cx+12)+' '+(cy-16)+' '+(cx+24)+' '+(cy-10)+' fill="none" stroke="'+hairCol+'" stroke-width="3" stroke-linecap="round"/>';
+    // eyes
+    svg+='<circle cx="'+(cx-20)+'" cy="'+cy+'" r="7" fill="#111"/><circle cx="'+(cx-20)+'" cy="'+cy+'" r="3" fill="'+eyeCol+'"/>';
+    svg+='<circle cx="'+(cx+20)+'" cy="'+cy+'" r="7" fill="#111"/><circle cx="'+(cx+20)+'" cy="'+cy+'" r="3" fill="'+eyeCol+'"/>';
+    // mouth
+    svg+='<path d="M '+(cx-10)+' '+(cy+18)+' Q '+cx+' '+(cy+24)+' '+(cx+10)+' '+(cy+18)+' fill="none" stroke="#5a1212" stroke-width="3" stroke-linecap="round"/>';
+    if(beard){ svg+='<path d="M '+(cx-26)+' '+(cy+40)+' Q '+cx+' '+(cy+56)+' '+(cx+26)+' '+(cy+40)+' fill="none" stroke="'+hairCol+'" stroke-width="5" stroke-linecap="round"/>';
+      svg+='<path d="M '+(cx-10)+' '+(cy+34)+' Q '+cx+' '+(cy+44)+' '+(cx+10)+' '+(cy+34)+' fill="none" stroke="'+hairCol+'" stroke-width="4" stroke-linecap="round"/>'; }
+    svg+='</svg>';
+    return 'data:image/svg+xml;base64,'+btoa(svg);
+  }
+
+  function artRoom(kind){
+    // simple css-drawn room "art" hint via colored gradients; actual room feel comes from CSS
+    const g={ bedroom:'linear-gradient(180deg,#2a1212,#120606)', throne:'linear-gradient(180deg,#241218,#10050c)',
+      library:'linear-gradient(180deg,#1e1810,#0c0a04)', kitchen:'linear-gradient(180deg,#201410,#0f0804)',
+      ballroom:'linear-gradient(180deg,#2a1020,#10040c)', heirs:'linear-gradient(180deg,#141820,#05080a)' };
+    return g[kind]||'#100a0a';
+  }
+
+  /* ---------------------------------------------------------------- initial state */
+  const EMPTY_PLAYER={
+    id:uid(),gender:'male',name:'',age:25,title:'Count',house:'House Nocturne',
+    looks:{hair:'raven-black',eyes:'crimson',skin:'alabaster',build:'slender',beard:false},
+    personality:[],power:'Blood Sorcery',portrait:null,
+    stats:{gold:600,blood:100,health:100,power:40,reputation:50,stability:50},
+    traits:{},inventory:[],relations:{},lovers:[],spouse:null,consorts:[],
+    children:[],guards:0,advisors:[],defense:0,allies:[],enemies:[],
+    dead:false,abdicated:false,reignStart:null
+  };
+  function newState(){
+    return {
+      version:1,createdAt:Date.now(),night:1,
+      date:{year:1198,month:'Duskmoon',day:3,era:'Nocturne'},
+      actionsLeft:8,maxActions:8,
+      player:JSON.parse(JSON.stringify(EMPTY_PLAYER)),
+      npcs:[],heirs:[],factions:{house:[],pack:[],coven:[],village:[],hunter:[]},
+      council:{lastTopics:[],petitions:[]},
+      history:[],events:[],
+      settings:{music:true,sfx:true,reducedMotion:false}
+    };
+  }
+
+  let S=newState();
+  let audioCtx=null;
+
+  /* ---------------------------------------------------------------- audio (synthesized, no files) */
+  function audio(){
+    if(!audioCtx){
+      try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){audioCtx=null;}
+    }
+    return audioCtx;
+  }
+  function playTone(type,freq,dur,vol=0.05){
+    const ctx=audio(); if(!ctx)return; const t=ctx.currentTime;
+    const o=ctx.createOscillator(); const g=ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+dur);
+  }
+  function sfx(kind){
+    if(!S.settings.sfx)return;
+    const ctx=audio(); if(!ctx)return; const t=ctx.currentTime;
+    if(kind==='click'){playTone('square',700,0.05,0.04);}
+    else if(kind==='tick'){playTone('square',1100,0.04,0.03);}
+    else if(kind==='thunder'){
+      playTone('sawtooth',110,0.6,0.07); setTimeout(()=>playTone('sawtooth',80,0.8,0.06),300);
+    } else if(kind==='wolf'){
+      playTone('sawtooth',320,0.25,0.06); setTimeout(()=>playTone('sawtooth',210,0.35,0.05),260);
+    } else if(kind==='fire'){
+      playTone('sine',220,0.12,0.02);
+    } else if(kind==='waltz'){
+      playTone('sine',523,0.18,0.03); setTimeout(()=>playTone('sine',659,0.18,0.03),200); setTimeout(()=>playTone('sine',784,0.25,0.03),400);
+    } else if(kind==='reveal'){
+      playTone('sine',900,0.1,0.05); setTimeout(()=>playTone('sine',1100,0.1,0.04),120);
+    } else if(kind==='heart'){
+      playTone('sine',150,0.1,0.05); setTimeout(()=>playTone('sine',150,0.1,0.05),150);
+    }
+  }
+  function musicLoop(){
+    if(!S.settings.music||!audioCtx)return;
+    const ctx=audioCtx; const t=ctx.currentTime;
+    const notes=[130.81,164.81,196,220,196,164.81,130.81,110];
+    notes.forEach((f,i)=>{playTone('sine',f,0.5,0.02);});
+    setTimeout(musicLoop,5200);
+  }
+
+  /* ---------------------------------------------------------------- helpers */
+  function log(txt){S.history.unshift({night:S.night,text:txt,time:Date.now()});if(S.history.length>400)S.history.length=400;}
+  function fmtStat(k){const m={gold:'Gold',blood:'Blood',health:'Health',power:'Power',reputation:'Reputation',stability:'Stability'};return m[k]||k;}
+  function statColor(k,v){
+    if(k==='health'||k==='blood') return v<30?'var(--red)':'var(--gold-light)';
+    if(k==='stability'||k==='reputation') return v<30?'var(--red)':v>70?'var(--green)':'var(--gold-light)';
+    return 'var(--gold-light)';
+  }
+  function titleFor(g){return g==='female'?pick(TITLES_FEMALE):pick(TITLES_MALE);}
+  function relationKey(id){return S.player.relations[id]||(S.player.relations[id]={trust:0,loyalty:0,status:'stranger',history:[],met:S.night});}
+  function npcById(id){return S.npcs.find(n=>n.id===id)||S.heirs.find(h=>h.id===id)||S.player;}
+
+  /* ---------------------------------------------------------------- world gen */
+  function genNPC(opts={}){
+    const gender=opts.gender||pick(['male','female']);
+    const first=gender==='female'?pick(NPC_FIRST_FEMALE):pick(NPC_FIRST_MALE);
+    const last=opts.last||pick(NPC_LAST);
+    const age=opts.age||(18+Math.floor(Math.random()*120));
+    const type=opts.type||pick(['vampire','wolf','witch','human']);
+    const c={id:uid(),name:first+' '+last,gender,age,type,house:opts.house||null,
+      looks:{hair:pick(HAIR),eyes:pick(EYES),skin:pick(SKIN),build:pick(['slender','athletic','sturdy','willowy'])},
+      personality:pick(PERSONALITY,0)&&[pick(PERSONALITY),pick(PERSONALITY)],
+      secret:pick(['None','Drinks from innocents','Plots against the crown','Practices forbidden magic','Is hunter kin','Hides a hybrid child','Owes a debt to a rival house','Cursed by a witch']),
+      trust:0,loyalty:0,status:'stranger',history:['First met on night '+S.night],spouse:null,children:[],lover:null,dead:false,portrait:portraitSVG({gender,hair:pick(HAIR),eyes:pick(EYES),skin:pick(SKIN),age,beard:gender==='male'&&chance(.3)})};
+    return c;
+  }
+  function initWorld(){
+    // seed a few NPCs incl elite love interests
+    const sia={id:'npc_sia',name:'Sia Swendy',gender:'female',age:210,type:'witch',house:null,
+      looks:{hair:'crimson',eyes:'crimson',skin:'alabaster',build:'willowy'},personality:['Seductive','Cunning'],
+      secret:'Binds lovers with blood oaths',trust:10,loyalty:0,status:'stranger',
+      history:['A red-clad witch of the Veil.','She does not give her trust lightly.'],spouse:null,children:[],lover:null,dead:false,
+      portrait:portraitSVG({gender:'female',hair:'crimson',eyes:'crimson',skin:'alabaster',age:210,beard:false})};
+    const tiff={id:'npc_tiff',name:'Tiff Mcray',gender:'female',age:95,type:'wolf',house:null,
+      looks:{hair:'obsidian',eyes:'amber',skin:'dusky',build:'athletic'},personality:['Honorable','Passionate'],
+      secret:'Alpha blood she keeps hidden',trust:8,loyalty:0,status:'stranger',
+      history:['Fur-clad alpha of the Ironclaw.','Wary of court politics.'],spouse:null,children:[],lover:null,dead:false,
+      portrait:portraitSVG({gender:'female',hair:'obsidian',eyes:'amber',skin:'dusky',age:95,beard:false})};
+    S.npcs.push(sia,tiff);
+    for(let i=0;i<14;i++)S.npcs.push(genNPC());
+    // factions
+    FACTION_NAMES.house.forEach((n,i)=>S.factions.house.push({id:'f_h_'+i,name:n,leader:genNPC({type:'vampire'}).name,stance:'neutral',power:30+Math.floor(Math.random()*40),territory:10+Math.floor(Math.random()*20)}));
+    FACTION_NAMES.pack.forEach((n,i)=>S.factions.pack.push({id:'f_p_'+i,name:n,leader:genNPC({type:'wolf'}).name,stance:'neutral',power:25+Math.floor(Math.random()*35),territory:8+Math.floor(Math.random()*15)}));
+    FACTION_NAMES.coven.forEach((n,i)=>S.factions.coven.push({id:'f_c_'+i,name:n,leader:genNPC({type:'witch'}).name,stance:'neutral',power:20+Math.floor(Math.random()*30),territory:5+Math.floor(Math.random()*12)}));
+    FACTION_NAMES.village.forEach((n,i)=>S.factions.village.push({id:'f_v_'+i,name:n,leader:'Elder '+pick(NPC_LAST),stance:'neutral',blood:50+Math.floor(Math.random()*50),unrest:0}));
+    FACTION_NAMES.hunter.forEach((n,i)=>S.factions.hunter.push({id:'f_hu_'+i,name:n,leader:genNPC({type:'human'}).name,threat:20+Math.floor(Math.random()*40),active:true}));  }
+  if(!localStorage.getItem('bn_save')){initWorld();}
+
+  /* ---------------------------------------------------------------- save/load */
+  function saveState(slot='manual'){
+    S.settings=S.settings||{music:true,sfx:true,reducedMotion:false};
+    const payload={state:S,savedAt:Date.now(),night:S.night};
+    try{localStorage.setItem('bn_save_'+slot,JSON.stringify(payload));}catch(e){}
+    try{localStorage.setItem('bn_autosave',JSON.stringify(payload));}catch(e){}
+    try{localStorage.setItem('bn_slots',JSON.stringify([...(JSON.parse(localStorage.getItem('bn_slots')||'[]')).filter(s=>s!==slot),slot].slice(-8)));}catch(e){}
+    toast('Saved ('+slot+')');
+  }
+  function loadState(slot){
+    try{
+      const raw=localStorage.getItem('bn_save_'+slot);
+      if(!raw)return false;
+      const p=JSON.parse(raw);
+      if(p.state)S=p.state; else S=p;
+      S.settings=S.settings||{music:true,sfx:true,reducedMotion:false};
+      return true;
+    }catch(e){return false;}
+  }
+  function exportGame(){
+    const data=JSON.stringify({state:S,exportedAt:Date.now()});
+    const blob=new Blob([data],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='bloodline-nocturne-save-'+S.night+'.json';a.click();
+    URL.revokeObjectURL(url); toast('Exported save');
+  }
+  function importGame(file){
+    const r=new FileReader(); r.onload=e=>{
+      try{
+        const p=JSON.parse(e.target.result);
+        S=p.state||p; S.settings=S.settings||{music:true,sfx:true,reducedMotion:false};
+        saveState('manual'); render(); toast('Imported save');
+      }catch(err){toast('Import failed');}
+    }; r.readAsText(file);
+  }
+  function newGame(){
+    S=newState(); initWorld(); saveState('manual'); renderMain();
+  }
+
+  /* ---------------------------------------------------------------- council */
+  const COUNCIL_TOPICS=[
+    {key:'blood_shortage',title:'The Blood Shortage',text:'The cellars run low. Servants whisper that the kitchens cannot feed the house tonight.'},
+    {key:'treason',title:'A Treasonous Letter',text:'A sealed letter addressed to a rival house was found in a guard\'s quarters.'},
+    {key:'rival_house',title:'Rival House Demands Tribute',text:'A neighboring vampire house claims our border woods and demands blood tribute.'},
+    {key:'witches',title:'Coven at the Gate',text:'Witches ask to trade charms and knowledge within our walls.'},
+    {key:'hunters',title:'Hunters Near the Village',text:'Hunters were seen near a feeder village. The mortals are frightened.'},
+    {key:'territory',title:'Territorial Claim',text:'A wolf pack asserts ancient rights to the eastern moors bordering our lands.'},
+    {key:'scandal',title:'Noble Scandal',text:'A high noble is seen leaving a commoner\'s bed at dawn. Gossip spreads.'},
+    {key:'hybrid_rights',title:'Hybrid Rights',text:'A vampire-wolf hybrid child seeks recognition and protection under house law.'}
+  ];
+  function genCouncil(){
+    const used=new Set(S.council.lastTopics);
+    const pool=COUNCIL_TOPICS.filter(t=>!used.has(t.key));
+    if(pool.length<5) pool.push(...COUNCIL_TOPICS.filter(t=>used.has(t.key)));
+    const chosen=shuffle(pool).slice(0,5);
+    S.council.lastTopics=chosen.map(t=>t.key);
+    S.council.petitions=chosen.map((t,i)=>({
+      id:'pet_'+i,topic:t.key,title:t.title,text:t.text,resolved:false,
+      options:petOptions(t.key)
+    }));
+  }
+  function petOptions(key){
+    const base=[
+      {text:'Listen and compromise',eff:{gold:-20,stability:5,loyalty:5},note:'A measured response.'},
+      {text:'Act with authority',eff:{gold:0,stability:-5,loyalty:10},note:'You assert dominance.'},
+      {text:'Ignore the matter',eff:{gold:0,stability:-10,loyalty:-5},note:'Silence breeds resentment.'}
+    ];
+    const spec={
+      blood_shortage:[{text:'Open the private reserves',eff:{gold:-40,blood:40,stability:10},note:'Costly but steadying.'},
+        {text:'Tax the feeder villages',eff:{gold:20,blood:20,stability:-15,loyalty:-10},note:'The villages suffer.'},
+        {text:'Hunt beyond the borders',eff:{blood:30,stability:-5},note:'Dangerous for the hunters.'}],
+      treason:[{text:'Interrogate the guard',eff:{stability:5,loyalty:5},note:'Seek the truth.'},
+        {text:'Execute publicly',eff:{stability:-10,loyalty:15},note:'Fear keeps order.'},
+        {text:'Exile quietly',eff:{loyalty:-5},note:'Mercy, or weakness?'}],
+      rival_house:[{text:'Pay the tribute',eff:{gold:-60,stability:5},note:'Buy peace.'},
+        {text:'Refuse and prepare war',eff:{gold:-30,stability:-10},note:'Steel for conflict.'},
+        {text:'Counter-demand concessions',eff:{gold:30,stability:-5},note:'A gamble.'}],
+      witches:[{text:'Welcome the coven',eff:{gold:-30,power:10,stability:-5},note:'Magic has a price.'},
+        {text:'Ban them from the castle',eff:{stability:5,loyalty:5},note:'Tradition first.'},
+        {text:'Arrest their leader',eff:{gold:-20,stability:-15},note:'Bold and risky.'}],
+      hunters:[{text:'Increase the guard',eff:{gold:-50,defense:10},note:'Fortify the village.'},
+        {text:'Send a warning',eff:{loyalty:5},note:'A show of strength.'},
+        {text:'Bribe the hunters',eff:{gold:-40},note:'Blood for silence.'}],
+      territory:[{text:'Grant hunting rights',eff:{stability:5,loyalty:-5},note:'Share the land.'},
+        {text:'Claim the moors for the house',eff:{stability:-5,loyalty:10},note:'Assertion.'},
+        {text:'Mediate a boundary',eff:{gold:-20,stability:5},note:'Diplomacy.'}],
+      scandal:[{text:'Confine the noble',eff:{stability:5,loyalty:5},note:'Order restored.'},
+        {text:'Hush it with gold',eff:{gold:-40,stability:5},note:'Secrets cost.'},
+        {text:'Let them wed commoner',eff:{reputation:10,stability:-5},note:'Scandal becomes story.'}],
+      hybrid_rights:[{text:'Grant full rights',eff:{stability:-10,reputation:15},note:'Controversial mercy.'},
+        {text:'Protected but separate',eff:{stability:5},note:'A guarded compromise.'},
+        {text:'Deny recognition',eff:{loyalty:-10,stability:-5},note:'Hardline tradition.'}]
+    };
+    return (spec[key]||base).slice(0,3);
+  }
+  function shuffle(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+  /* ---------------------------------------------------------------- living world */
+  function livingWorldTick(){
+    // events each night
+    const evs=[];
+    // age heirs
+    S.heirs.forEach(h=>{
+      if(h.dead)return;
+      h.age=(h.age||0)+1;
+      if(h.age===18 && !h.adult){h.adult=true; log(h.name+' has come of age.'); }
+      if(h.age>700 && chance(.15)){h.dead=true; log(h.name+' has passed after long years.'); }
+    });
+    // npcs age & events
+    S.npcs.forEach(n=>{
+      if(n.dead)return;
+      n.age=(n.age||0)+1;
+      if(n.age>700 && chance(.1)){n.dead=true; log(n.name+' has passed.'); }
+    });
+    // random events
+    if(chance(.25)){const n=pick(S.npcs.filter(x=>!x.dead&&x.age>25)); if(n){ n.spouse=pick(S.npcs.filter(x=>!x.dead&&x!==n&&x.age>25)).name; log(n.name+' has wed '+n.spouse+'.'); evs.push('wedding'); }}
+    if(chance(.18)){const n=pick(S.npcs.filter(x=>!x.dead&&x.spouse&&!x.children.some(c=>c.new))); if(n){ const c=genNPC({age:0,last:n.name.split(' ')[1],gender:pick(['male','female']),house:n.house}); c.new=true; n.children=n.children||[]; n.children.push(c); S.heirs.push(c); log('A child is born to '+n.name+'.'); evs.push('birth'); }}
+    if(chance(.12)){const a=pick(S.npcs.filter(x=>!x.dead)),b=pick(S.npcs.filter(x=>!x.dead&&x!==a)); log(a.name+' and '+b.name+' begin a feud.'); evs.push('feud'); }
+    if(chance(.08)){log('A royal ball is announced at court.'); evs.push('ball'); }
+    if(chance(.1)){log('A political crisis stirs among the houses.'); evs.push('crisis'); }
+    return evs;
+  }
+
+  /* ---------------------------------------------------------------- actions */
+  function actionCost(){ if(S.actionsLeft<=0){toast('No actions left. End the night.');return false;} S.actionsLeft--; return true; }
+  function gain(kind,amt){S.player.stats[kind]=clamp((S.player.stats[kind]||0)+amt,0,999); if(kind==='blood'&&S.player.stats.blood<20)log('Your blood runs low.'); }
+
+  /* ===================================================================== RENDER */
+  function render(){
+    const screen=S.screen||'splash';
+    $$('.screen').forEach(el=>el.classList.remove('active'));
+    const el=$(screen); if(el)el.classList.add('active');
+    if(typeof window['render_'+screen]==='function') window['render_'+screen]();
+  }
+  function show(screen){S.screen=screen; render();}
+
+  /* ===== splash ===== */
+  function render_splash(){
+    $('#app').innerHTML=`
+      <div class="stage"><div class="moon"></div><div class="fog"></div>
+        <div class="candle" style="left:8%"></div><div class="candle" style="left:22%;animation-delay:.6s"></div>
+        <div class="candle" style="left:36%;animation-delay:1.2s"></div><div class="candle" style="left:50%;animation-delay:1.8s"></div>
+        <div class="candle" style="left:64%;animation-delay:2.4s"></div><div class="candle" style="left:78%;animation-delay:3s"></div>
+        <div class="candle" style="left:92%;animation-delay:3.6s"></div></div>
+      <div class="screen active" style="padding-top:10vh;">
+        <div style="text-align:center;">
+          <div style="font-size:42px;letter-spacing:12px;color:var(--gold);text-shadow:0 0 20px rgba(201,162,39,.4);font-weight:bold;">BLOODLINE:<br>NOCTURNE</div>
+          <div style="font-size:13px;letter-spacing:6px;color:var(--text-dim);margin-top:6px;text-transform:uppercase;">87 Production Studio</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:10px;">A gothic vampire dynasty RPG</div>
+        </div>
+        <div class="panel center" style="max-width:340px;margin:24px auto 0;">
+          <div class="btn primary full" style="font-size:17px;letter-spacing:2px;" data-action="screen:creation">New Dynasty</div>
+          <div class="btn full" data-action="screen:saves">Load / Saves</div>
+          <div class="btn secondary full small" data-action="audio:toggle">Audio: <span id="audiostate">ON</span></div>
+        </div>
+        <div class="log center" style="max-width:340px;margin:16px auto 0;">
+          <div>Build your bloodline. Rule the night.</div>
+        </div>
+      </div>
+      <div id="toast"></div>
+    `;
+    $('#audiostate').textContent=S.settings.music?'ON':'OFF';
+  }
+  on('click','[data-action="screen:creation"]',t=>{sfx('click');show('creation');});
+  on('click','[data-action="screen:saves"]',t=>{sfx('click');show('saves');});
+  on('click','[data-action="audio:toggle"]',t=>{sfx('click');S.settings.music=!S.settings.music;$('#audiostate').textContent=S.settings.music?'ON':'OFF';if(S.settings.music)musicLoop();render_splash();});
+
+  /* ===== creation ===== */
+  function render_creation(){
+    const p=S.player;
+    let genders=`
+      <div class="gender">
+        <div class="opt ${p.gender==='male'?'selected':''}" data-action="cre:gender:male">
+          <div class="portrait"><img src="${portraitSVG({gender:'male',hair:p.looks.hair,eyes:p.looks.eyes,skin:p.looks.skin,age:p.age,beard:p.looks.beard})}" alt=""></div>
+          <div>Male</div>
+        </div>
+        <div class="opt ${p.gender==='female'?'selected':''}" data-action="cre:gender:female">
+          <div class="portrait"><img src="${portraitSVG({gender:'female',hair:p.looks.hair,eyes:p.looks.eyes,skin:p.looks.skin,age:p.age,beard:false})}" alt=""></div>
+          <div>Female</div>
+        </div>
+      </div>`;
+    $('#app').innerHTML=`
+      <div class="screen active">
+        <div class="hdr"><div class="title">Embrace</div><div class="btn-back" data-action="screen:splash">Back</div></div>
+        <div style="padding:0 10px 10px;">
+          <div class="panel">
+            <h2>Your Identity</h2>
+            ${genders}
+            <div class="row">
+              <div class="col"><label>Name</label><input id="cre_name" value="${escapeHtml(p.name)}"></div>
+              <div class="col"><label>Age</label><input id="cre_age" type="number" value="${p.age}" min="18" max="800"></div>
+            </div>
+            <div class="row">
+              <div class="col"><label>Title</label><select id="cre_title">${TITLES_MALE.map(x=>`<option ${p.title===x?'selected':''}>${x}</option>`).join('')}</select></div>
+              <div class="col"><label>House</label><input id="cre_house" value="${escapeHtml(p.house)}"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Looks</h2>
+            <div class="row">
+              <div class="col"><label>Hair</label><select id="cre_hair">${HAIR.map(x=>`<option ${p.looks.hair===x?'selected':''}>${x}</option>`).join('')}</select></div>
+              <div class="col"><label>Eyes</label><select id="cre_eyes">${EYES.map(x=>`<option ${p.looks.eyes===x?'selected':''}>${x}</option>`).join('')}</select></div>
+            </div>
+            <div class="row">
+              <div class="col"><label>Skin</label><select id="cre_skin">${SKIN.map(x=>`<option ${p.looks.skin===x?'selected':''}>${x}</option>`).join('')}</select></div>
+              <div class="col"><label>Build</label><select id="cre_build">${['slender','athletic','sturdy','willowy'].map(x=>`<option ${p.looks.build===x?'selected':''}>${x}</option>`).join('')}</select></div>
+            </div>
+            <div class="row">
+              <div class="col"><label style="margin-bottom:2px;">Portrait file (optional)</label><input type="file" id="cre_portrait" accept="image/*"></div>
+              <div class="col" style="display:flex;align-items:flex-end;"><label class="tag ${p.looks.beard?'active':''}" data-action="cre:toggle:beard" style="cursor:pointer;">Beard (male)</label></div>
+            </div>
+            <div id="cre_prev" style="text-align:center;margin:8px 0;"><div class="portrait"><img src="${portraitSVG(p)}" alt=""></div></div>
+          </div>
+          <div class="panel">
+            <h2>Personality & Power</h2>
+            <div style="margin:4px 0;">Personality (tap to pick up to 3)</div>
+            <div class="cre-col">${PERSONALITY.map(x=>`<span class="tag ${p.personality.includes(x)?'active':''}" data-action="cre:trait:${x}">${x}</span>`).join('')}</div>
+            <div style="margin-top:8px;"><label>Vampire Power</label><select id="cre_power">${POWERS.map(x=>`<option ${p.power===x?'selected':''}>${x}</option>`).join('')}</select></div>
+          </div>
+          <div class="panel center">
+            <div class="btn primary full" data-action="cre:done" style="font-size:17px;">Begin the Reign</div>
+          </div>
+        </div>
+      </div>
+      <div id="toast"></div>
+    `;
+    // wire inputs live
+    $$('#cre_name,#cre_age,#cre_title,#cre_house,#cre_hair,#cre_eyes,#cre_skin,#cre_build,#cre_power').forEach(inp=>{
+      inp.oninput=e=>{const k=e.target.id.replace('cre_','');if(k==='title'||k==='power'||k==='hair'||k==='eyes'||k==='skin'||k==='build')p[k]=e.target.value;else if(k==='name')p.name=e.target.value;else if(k==='age')p.age=parseInt(e.target.value)||25; refreshCrePrev();};
+    });
+    $('#cre_portrait').onchange=e=>{
+      const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>{p.portrait=ev.target.result; refreshCrePrev(); toast('Portrait uploaded');}; r.readAsDataURL(f);
+    };
+    function refreshCrePrev(){
+      $('#cre_prev').innerHTML='<div class="portrait"><img src="'+(p.portrait||portraitSVG(p))+'" alt=""></div>';
+      $$('.gender .opt').forEach((o,i)=>{o.classList.toggle('selected',i===0?p.gender==='male':p.gender==='female');});
+    }
+  }
+  on('click','[data-action^="cre:gender:"]',t=>{sfx('click');S.player.gender=t.dataset.action.split(':')[2];S.player.title=titleFor(S.player.gender);render_creation();});
+  on('click','[data-action^="cre:trait:"]',t=>{sfx('click');const tr=t.dataset.action.split(':')[2];const p=S.player; if(p.personality.includes(tr))p.personality=p.personality.filter(x=>x!==tr);else if(p.personality.length<3)p.personality.push(tr); render_creation();});
+  on('click','[data-action="cre:toggle:beard"]',t=>{sfx('click');S.player.looks.beard=!S.player.looks.beard;render_creation();});
+  on('click','[data-action="cre:done"]',t=>{sfx('click');
+    const name=$('#cre_name').value.trim()||'Nocturne';
+    S.player.name=name; S.player.title=$('#cre_title').value; S.player.house=$('#cre_house').value||'House Nocturne';
+    S.player.looks={hair:$('#cre_hair').value,eyes:$('#cre_eyes').value,skin:$('#cre_skin').value,build:$('#cre_build').value,beard:S.player.looks.beard};
+    S.player.power=$('#cre_power').value;
+    S.player.portrait=S.player.portrait||portraitSVG(S.player);
+    S.player.reignStart=S.night;
+    S.actionsLeft=S.maxActions;
+    genCouncil();
+    saveState('manual');
+    show('main');
+  });
+
+  /* ===== main screen ===== */
+  function render_main(){
+    const p=S.player;
+    let html=`
+      <div class="screen active">
+        <div class="hdr"><div class="title">Night ${S.night}</div><div class="sub">${S.date.month} ${S.date.day}, ${S.date.year} &bull; Actions <span style="color:var(--gold-light)">${S.actionsLeft}/${S.maxActions}</span></div></div>
+        <div style="padding:6px 10px 4px;">
+          <div class="portrait-wrap" style="text-align:center;">
+            <div class="portrait"><img src="${p.portrait||portraitSVG(p)}" alt=""></div>
+            <div class="label">${escapeHtml(p.name)} &bull; Age ${p.age} &bull; ${p.title} of ${escapeHtml(p.house)}</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="v" style="color:var(--gold-light)">${p.stats.gold}</span><span class="l">gold</span><div class="bar"><span style="width:${clamp(p.stats.gold/1000*100,0,100)}%"></span></div></div>
+            <div class="stat"><span class="v" style="color:${statColor('blood',p.stats.blood)}">${p.stats.blood}</span><span class="l">blood</span><div class="bar"><span style="background:${statColor('blood',p.stats.blood)};width:${clamp(p.stats.blood,0,100)}%"></span></div></div>
+            <div class="stat"><span class="v" style="color:${statColor('health',p.stats.health)}">${p.stats.health}</span><span class="l">health</span><div class="bar"><span style="background:${statColor('health',p.stats.health)};width:${clamp(p.stats.health,0,100)}%"></span></div></div>
+            <div class="stat"><span class="v">${p.stats.power}</span><span class="l">power</span><div class="bar"><span style="width:${clamp(p.stats.power,0,100)}%"></span></div></div>
+            <div class="stat"><span class="v" style="color:${statColor('reputation',p.stats.reputation)}">${p.stats.reputation}</span><span class="l">reputation</span><div class="bar"><span style="background:${statColor('reputation',p.stats.reputation)};width:${clamp(p.stats.reputation,0,100)}%"></span></div></div>
+            <div class="stat"><span class="v" style="color:${statColor('stability',p.stats.stability)}">${p.stats.stability}</span><span class="l">stability</span><div class="bar"><span style="background:${statColor('stability',p.stats.stability)};width:${clamp(p.stats.stability,0,100)}%"></span></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Actions This Night</h2>
+          <div class="btngrid">
+            <div class="btn" data-action="act:feeding">Feeding</div>
+            <div class="btn" data-action="act:romance">Romance</div>
+            <div class="btn" data-action="act:mentoring">Mentoring</div>
+            <div class="btn" data-action="act:research">Research</div>
+            <div class="btn" data-action="act:training">Training</div>
+            <div class="btn" data-action="act:exploration">Exploration</div>
+            <div class="btn" data-action="act:diplomacy">Diplomacy</div>
+            <div class="btn" data-action="act:ruling">Ruling</div>
+          </div>
+          <div class="row center" style="margin-top:6px;">
+            <div class="btn primary" data-action="screen:sanctuary">Sanctuary</div>
+            <div class="btn" data-action="screen:kingdom">Kingdom</div>
+            <div class="btn" data-action="screen:world">World</div>
+            <div class="btn" data-action="screen:character">Character</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Recent History</h2>
+          <div class="log">${S.history.slice(0,6).map(h=>`<div class="entry">Night ${h.night}&nbsp; ${h.text}</div>`).join('')||'<div style="font-size:11px;color:var(--text-dim)">The night is young.</div>'}</div>
+        </div>
+        <div class="row center" style="margin-top:8px;">
+          <div class="btn primary full" data-action="night:next" style="font-size:17px;">Next Night</div>
+          <div class="btn full" data-action="game:save">Save</div>
+        </div>
+      </div>
+      <div id="toast"></div>
+    `;
+    $('#app').innerHTML=html;
+  }
+  /* quick actions */
+  const ACT_EFF={
+    feeding:{blood:25,health:-3,text:'You feed. Blood rises, but the hunt leaves a mark.'},
+    romance:{reputation:5,text:'You pursue romance. Hearts stir in the dark.'},
+    mentoring:{power:5,text:'You mentor an heir. Wisdom passes.'},
+    research:{power:8,gold:-20,text:'Ancient tomes reveal secrets.'},
+    training:{power:6,health:-5,text:'You train your body and will.'},
+    exploration:{reputation:10,gold:-10,text:'You explore the wider night.'},
+    diplomacy:{reputation:5,stability:5,text:'You open diplomatic channels.'},
+    ruling:{stability:10,gold:-15,text:'You rule. The house stands firm.'}
+  };
+  on('click','[data-action^="act:"]',t=>{
+    sfx('tick'); if(!actionCost())return;
+    const a=t.dataset.action.slice(4); const e=ACT_EFF[a]; const p=S.player.stats;
+    for(const k in e){if(k!=='text')p[k]=clamp((p[k]||0)+e[k],0,999);}
+    log('Action: '+a+'. '+e.text);
+    render_main();
+  });
+  on('click','[data-action="night:next"]',t=>{sfx('heart');if(nextNight()!==false)render_main();});
+  on('click','[data-action="game:save"]',t=>{sfx('click');saveState('manual');render_main();});
+
+  function nextNight(){
+    S.night++; S.actionsLeft=S.maxActions;
+    // decay blood each night
+    S.player.stats.blood=clamp(S.player.stats.blood-12,0,100);
+    S.player.stats.health=clamp(S.player.stats.health-3,0,100);
+    S.player.stats.stability=clamp(S.player.stats.stability-2,0,100);
+    // living world
+    const evs=livingWorldTick();
+    if(evs.length) log('The living world stirs: '+evs.join(', ')+'.');
+    genCouncil();
+    saveState('autosave');
+    if(S.player.stats.health<=0){ S.player.dead=true; show('succession'); return false; }
+    if(S.player.dead||S.player.abdicated){ show('succession'); return false; }
+    return true;
+  }
+
+  /* ===== sanctuary / rooms ===== */
+  const ROOMS=[
+    {id:'bedroom',name:'The Bedroom',desc:'Invite lovers, deepen romance, propose, start a family.',art:'#c41e1e'},
+    {id:'heirs',name:"Heirs' Room",desc:'Speak with children, teach, train, protect, prepare successors.',art:'#2c3e50'},
+    {id:'kitchen',name:'The Kitchen',desc:'Manage blood reserves, servants, meals, feasts.',art:'#5d2e0e'},
+    {id:'throne',name:'The Throne Room',desc:'Hear disputes, receive guests, issue decrees.',art:'#4a1818'},
+    {id:'library',name:'The Library',desc:'Discover history, spells, artifacts, powers.',art:'#2e2b1e'},
+    {id:'ballroom',name:'The Ballroom',desc:'Host masquerades, celebrations, romances, diplomacy.',art:'#5e1b7a'}
+  ];
+  function render_sanctuary(){
+    $('#app').innerHTML=`
+      <div class="screen active">
+        <div class="hdr"><div class="title">Sanctuary</div><div class="btn-back" data-action="screen:main">Back</div></div>
+        <div style="padding:0 10px 10px;">
+          <div class="panel"><h2>Six Rooms of the Keep</h2>
+          <div class="roomgrid">${ROOMS.map(r=>`
+            <div class="room" style="background:${artRoom(r.id)}" data-action="room:${r.id}">
+              <div class="rname">${r.name}</div>
+              <div class="rdesc">${r.desc}</div>
+            </div>`).join('')}</div></div>
+          <div class="row center"><div class="btn full" data-action="screen:main">Return to Main</div></div>
+        </div>
+      </div>
+      <div id="toast"></div>
+    `;
+  }
+  ROOMS.forEach(r=>{on('click','[data-action="room:'+r.id+'"]',t=>{sfx('click');window['render_room_'+r.id]();});});
+
+  function roomPage(rid){
+    const r=ROOMS.find(x=>x.id===rid);
+    return `
+      <div class="screen active">
+        <div class="hdr"><div class="title">${r.name}</div><div class="btn-back" data-action="screen:sanctuary">Back</div></div>
+        <div style="padding:0 10px 10px;">
+          <div class="panel" style="background:${artRoom(rid)};"><h2 style="color:var(--gold-light)">${r.name}</h2>
+            <div style="font-size:12px;color:var(--text-dim);margin:6px 0;">${r.desc}</div>
+            ${roomContent(rid)}
+          </div>
+          <div class="row center"><div class="btn full" data-action="screen:sanctuary">Sanctuary</div></div>
+        </div>
+      </div>
+      <div id="toast"></div>
+    `;
+  }
+  ['bedroom','heirs','kitchen','throne','library','ballroom'].forEach(rid=>{
+    window['render_room_'+rid]=()=>{$('#app').innerHTML=roomPage(rid);};
+  });
+
+  function roomContent(rid){
+    const p=S.player;
+    if(rid==='bedroom'){
+      const partners=S.npcs.filter(n=>!n.dead && n.status!=='stranger').sort((a,b)=>b.trust-a.trust);
+      return `
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Your lovers and consorts await.</div>
+        ${partners.length?`
+          <div class="list">${partners.map(n=>`
+            <div class="card"><div class="mini"><img src="${n.portrait}" alt=""></div>
+              <div class="info"><div class="name">${escapeHtml(n.name)}</div><div class="sub">${n.type} &bull; trust ${n.trust} &bull; ${n.status}</div></div>
+              <div class="acts"><div class="btn small" data-action="bed:talk:${n.id}">Talk</div><div class="btn small" data-action="bed:night:${n.id}">Spend Night</div></div></div>
+          `).join('')}</div>
+        `:`<div style="font-size:11px;color:var(--text-dim);">No trusted partners yet. Meet someone in the Ballroom or Relationships.</div>`}
+        <div style="margin-top:8px;">
+          <div class="btn" data-action="bed:propose">Propose Marriage</div>
+          <div class="btn" data-action="bed:family">Start a Family</div>
+        </div>
+      `;
+    }
+    if(rid==='heirs'){
+      const kids=S.heirs.filter(h=>!h.dead).sort((a,b)=>a.age-b.age);
+      return `
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Your heirs and children.</div>
+        ${kids.length?`
+          <div class="list">${kids.map(h=>`
+            <div class="card"><div class="mini"><img src="${h.portrait||portraitSVG({gender:h.gender,hair:h.looks.hair,eyes:h.looks.eyes,skin:h.looks.skin,age:h.age})}" alt=""></div>
+              <div class="info"><div class="name">${escapeHtml(h.name)}</div><div class="sub">${h.age} yrs &bull; ${h.type} &bull; ${h.adult?'Adult':'Child'}</div></div>
+              <div class="acts"><div class="btn small" data-action="heir:teach:${h.id}">Teach</div><div class="btn small" data-action="heir:protect:${h.id}">Protect</div></div></div>
+          `).join('')}</div>
+        `:`<div style="font-size:11px;color:var(--text-dim);">No children yet. A family begins in the Bedroom.</div>`}
+      `;
+    }
+    if(rid==='kitchen'){
+      return `<div class="btngrid">
+        <div class="btn" data-action="kit:reserve">Manage Blood Reserves</div>
+        <div class="btn" data-action="kit:servants">Servants &amp; Meals</div>
+        <div class="btn" data-action="kit:feast">Hold a Feast</div>
+      </div>`;
+    }
+    if(rid==='throne'){
+      return `<div class="btngrid">
+        <div class="btn" data-action="thr:disputes">Hear Disputes</div>
+        <div class="btn" data-action="thr:guests">Receive Guests</div>
+        <div class="btn" data-action="thr:decree">Issue Decree</div>
+      </div>`;
+    }
+    if(rid==='library'){
+      return `<div class="btngrid">
+        <div class="btn" data-action="lib:history">Ancient History</div>
+        <div class="btn" data-action="lib:spells">Spells &amp; Artifacts</div>
+        <div class="btn" data-action="lib:powers">Your Powers</div>
+      </div>`;
+    }
+    if(rid==='ballroom'){
+      return `<div class="btngrid">
+        <div class="btn" data-action="ball:masquerade">Host Masquerade</div>
+        <div class="btn" data-action="ball:celebration">Celebration</div>
+        <div class="btn" data-action="ball:romance">Romance &amp; Diplomacy</div>
+      </div>`;
+    }
+    return '';
+  }
+  /* room actions */
+  on('click','[data-action^="bed:talk:"]',t=>{sfx('click');if(!actionCost())return; const n=npcById(t.dataset.action.split(':')[2]); n.trust=clamp(n.trust+5,0,100); relationKey(n.id).status='friend'; n.history.push('Spoke in the bedroom, night '+S.night); log('You spoke with '+n.name+'.'); render_room_bedroom();});
+  on('click','[data-action^="bed:night:"]',t=>{sfx('click');if(!actionCost())return; const n=npcById(t.dataset.action.split(':')[2]); const r=relationKey(n.id); n.trust=clamp(n.trust+10,0,100); r.status='lover'; if(!pLover(n.id))S.player.lovers.push(n.id); n.lover=S.player.id; gain('blood',15); gain('reputation',3); n.history.push('Spent the night together, night '+S.night); log('You spent the night with '+n.name+'.'); render_room_bedroom();});
+  on('click','[data-action="bed:propose"]',t=>{sfx('click');if(!actionCost())return; const c=pick(S.npcs.filter(x=>!x.dead&&x.status==='lover')); if(!c){toast('No lover to propose to.');return;} const r=relationKey(c.id); if(r.trust<40){toast(c.name+' is not ready.');return;} c.spouse=S.player.id; S.player.spouse=c.id; r.status='spouse'; log('You proposed to '+c.name+'. They accepted.'); render_room_bedroom();});
+  on('click','[data-action="bed:family"]',t=>{sfx('click');if(!actionCost())return; if(!S.player.spouse){toast('Take a spouse first.');return;} const spouse=npcById(S.player.spouse); const c=genNPC({age:0,last:spouse.name.split(' ')[1],gender:pick(['male','female']),house:S.player.house,looks:{hair:S.player.looks.hair,eyes:S.player.looks.eyes,skin:S.player.looks.skin}}); c.type=Math.random()<.25?'hybrid':(pick(['vampire','wolf'])); c.parents=[S.player.id,spouse.id]; S.heirs.push(c); log('A child is born: '+c.name+'.'); render_room_bedroom();});
+  function pLover(id){return S.player.lovers.includes(id);}
+  on('click','[data-action^="heir:teach:"]',t=>{sfx('click');if(!actionCost())return; const h=S.heirs.find(x=>x.id===t.dataset.action.split(':')[2]); h.traits=h.traits||{}; h.traits.discipline=clamp((h.traits.discipline||0)+5,0,100); log('You taught '+h.name+'.'); render_room_heirs();});
+  on('click','[data-action^="heir:protect:"]',t=>{sfx('click');if(!actionCost())return; const h=S.heirs.find(x=>x.id===t.dataset.action.split(':')[2]); h.protected=true; log('Guards protect '+h.name+'.'); render_room_heirs();});
+
+  on('click','[data-action="kit:reserve"]',t=>{sfx('click');if(!actionCost())return; gain('blood',30); gain('gold',-15); log('Blood reserves stocked.'); render_room_kitchen();});
+  on('click','[data-action="kit:servants"]',t=>{sfx('click');if(!actionCost())return; gain('stability',5); log('Servants attend the house.'); render_room_kitchen();});
+  on('click','[data-action="kit:feast"]',t=>{sfx('click');if(!actionCost())return; gain('blood',-20); gain('reputation',10); gain('stability',5); log('A feast is held in the kitchen.'); render_room_kitchen();});
+  on('click','[data-action="thr:disputes"]',t=>{sfx('click');if(!actionCost())return; gain('stability',5); gain('reputation',-3); log('You settled disputes in the throne room.'); render_room_throne();});
+  on('click','[data-action="thr:guests"]',t=>{sfx('click');if(!actionCost())return; gain('reputation',5); log('You received guests.'); render_room_throne();});
+  on('click','[data-action="thr:decree"]',t=>{sfx('click');if(!actionCost())return; gain('stability',-5); gain('loyalty_gain',0); log('A decree is issued.'); render_room_throne();});
+  on('click','[data-action="lib:history"]',t=>{sfx('click');if(!actionCost())return; gain('power',5); log('You studied ancient history.'); render_room_library();});
+  on('click','[data-action="lib:spells"]',t=>{sfx('click');if(!actionCost())return; const art=['Amulet of Vitae','Ring of Shadows','Vial of Elder Blood']; const a=pick(Array.from(art)); if(!S.player.inventory.includes(a))S.player.inventory.push(a); log('You found '+a+'.'); render_room_library();});
+  on('click','[data-action="lib:powers"]',t=>{sfx('click');if(!actionCost())return; gain('power',8); log('You refined '+S.player.power+'.'); render_room_library();});
+  on('click','[data-action="ball:masquerade"]',t=>{sfx('click');if(!actionCost())return; gain('reputation',10); gain('gold',-30); sfx('waltz'); log('A masquerade fills the ballroom.'); render_room_ballroom();});
+  on('click','[data-action="ball:celebration"]',t=>{sfx('click');if(!actionCost())return; gain('stability',10); log('A celebration lifts the house.'); render_room_ballroom();});
+  on('click','[data-action="ball:romance"]',t=>{sfx('click');if(!actionCost())return; show('relationships');});
+
+  /* ===== relationships ===== */
+  function render_relationships(){
+    const p=S.player;
+    let html=`<div class="screen active"><div class="hdr"><div class="title">Relationships</div><div class="btn-back" data-action="screen:main">Back</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>Known Souls</h2>
+      <div class="list">${S.npcs.filter(n=>!n.dead).map(n=>renderNPCCard(n)).join('')}</div>
+      </div>
+      <div class="panel center"><div class="btn full" data-action="screen:main">Return</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+  function renderNPCCard(n){
+    const r=relationKey(n.id);
+    return `<div class="card"><div class="mini"><img src="${n.portrait}" alt=""></div>
+      <div class="info"><div class="name">${escapeHtml(n.name)}</div><div class="sub">${n.type} &bull; ${n.age} yrs &bull; ${r.status}</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">${r.history.slice(-2).join(' ')}</div></div>
+      <div class="acts">
+        <div class="btn small" data-action="rel:talk:${n.id}">Talk</div>
+        <div class="btn small" data-action="rel:gift:${n.id}">Gift</div>
+        <div class="btn small" data-action="rel:court:${n.id}">Court</div>
+      </div></div>`;
+  }
+  on('click','[data-action^="rel:talk:"]',t=>{sfx('click');if(!actionCost())return; relAct(t.dataset.action.split(':')[2],'talk',{trust:3,loyalty:1,text:'You spoke warmly.'});render_relationships();});
+  on('click','[data-action^="rel:gift:"]',t=>{sfx('click');if(!actionCost())return; relAct(t.dataset.action.split(':')[2],'gift',{trust:6,gold:-15,text:'A gift was well received.'});render_relationships();});
+  on('click','[data-action^="rel:court:"]',t=>{sfx('click');if(!actionCost())return; relAct(t.dataset.action.split(':')[2],'court',{trust:8,text:'You court them.'});render_relationships();});
+  function relAct(id,act,e){
+    const n=npcById(id); const r=relationKey(id);
+    if(e.trust!==undefined)r.trust=clamp(r.trust+e.trust,0,100);
+    if(e.loyalty!==undefined)r.loyalty=clamp(r.loyalty+e.loyalty,0,100);
+    if(e.gold!==undefined)S.player.stats.gold=clamp(S.player.stats.gold+e.gold,0,999);
+    // elite rejection chance
+    if((id==='npc_sia'||id==='npc_tiff') && act==='court' && r.trust<50 && chance(.5)){
+      log(n.name+' turned down your advance. Not yet.'); sfx('tick'); return;
+    }
+    if(act==='court' && r.trust>=60 && !r.lover){ r.status='lover'; n.lover=S.player.id; S.player.lovers.push(id); log('You and '+n.name+' are now lovers.'); }
+    r.history.push(act+', night '+S.night+': '+e.text);
+    log(n.name+': '+e.text);
+  }
+
+  /* ===== dynasty / heirs ===== */
+  function render_dynasty(){
+    const p=S.player; const adults=S.heirs.filter(h=>!h.dead&&h.adult); const kids=S.heirs.filter(h=>!h.dead&&!h.adult);
+    let html=`<div class="screen active"><div class="hdr"><div class="title">Dynasty</div><div class="btn-back" data-action="screen:main">Back</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>Heirs &amp; Succession</h2>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Current heir presumptive: <b style="color:var(--gold-light)">${adults[0]?adults[0].name:'None'}</b></div>
+      <div class="list">
+        ${adults.map(h=>`<div class="card"><div class="mini"><img src="${h.portrait||portraitSVG({gender:h.gender,hair:h.looks.hair,eyes:h.looks.eyes,skin:h.looks.skin,age:h.age})}" alt=""></div>
+          <div class="info"><div class="name">${escapeHtml(h.name)}</div><div class="sub">${h.age} yrs &bull; ${h.type} &bull; adult</div></div>
+          <div class="acts"><div class="btn small" data-action="dyn:name:${h.id}">Name Heir</div><div class="btn small" data-action="dyn:protect:${h.id}">Guards</div></div></div>`).join('')}
+        ${kids.map(h=>`<div class="card"><div class="mini"><img src="${h.portrait||portraitSVG({gender:h.gender,hair:h.looks.hair,eyes:h.looks.eyes,skin:h.looks.skin,age:h.age})}" alt=""></div>
+          <div class="info"><div class="name">${escapeHtml(h.name)}</div><div class="sub">${h.age} yrs &bull; ${h.type}${h.type==='hybrid'?' &bull; hybrid':''}</div></div></div>`).join('')}
+      </div>
+      </div>
+      <div class="panel center"><div class="btn full" data-action="screen:main">Return</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+  on('click','[data-action^="dyn:name:"]',t=>{sfx('click');const h=S.heirs.find(x=>x.id===t.dataset.action.split(':')[2]); S.player.children=S.player.children||[]; if(!S.player.children.includes(h.id))S.player.children.push(h.id); log(h.name+' named heir.'); render_dynasty();});
+  on('click','[data-action^="dyn:protect:"]',t=>{sfx('click');const h=S.heirs.find(x=>x.id===t.dataset.action.split(':')[2]); h.protected=true; log('Guards assigned to '+h.name+'.'); render_dynasty();});
+
+  /* ===== kingdom ===== */
+  function render_kingdom(){
+    const p=S.player;
+    let html=`<div class="screen active"><div class="hdr"><div class="title">Kingdom</div><div class="btn-back" data-action="screen:main">Back</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>Realm</h2>
+      <div class="row"><div class="stat"><span class="v">${p.guards}</span><span class="l">guards</span></div><div class="stat"><span class="v">${p.advisors.length}</span><span class="l">advisors</span></div><div class="stat"><span class="v">${p.defense}</span><span class="l">defense</span></div></div>
+      <div class="btngrid-3">
+        <div class="btn" data-action="kg:recruit">Recruit Guards</div>
+        <div class="btn" data-action="kg:advisor">Appoint Advisor</div>
+        <div class="btn" data-action="kg:defense">Fortify Castle</div>
+        <div class="btn" data-action="screen:council">Council Petitions</div>
+        <div class="btn" data-action="screen:dynasty">Heirs</div>
+        <div class="btn" data-action="screen:relationships">Lovers &amp; Kin</div>
+      </div>
+      <div style="margin-top:6px;"><h3>Council Petitions (Night ${S.night})</h3>
+      ${S.council.petitions.map(pet=>`<div class="card" style="padding:6px;"><div class="name">${pet.title}</div><div class="sub" style="font-size:11px;">${pet.text}</div>
+        ${pet.options.map(o=>`<div class="btn small" data-action="council:${pet.id}:${o.eff.gold||0}:${o.eff.blood||0}:${o.eff.stability||0}:${o.eff.loyalty||0}" style="width:auto;margin:2px 4px 0 0;">${o.text}</div>`).join('')}
+      </div>`).join('')||'<div style="font-size:11px;color:var(--text-dim)">Petitions arrive at nightfall.</div>'}</div></div>
+      <div class="panel center"><div class="btn full" data-action="screen:main">Return</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+  on('click','[data-action="kg:recruit"]',t=>{sfx('click');if(!actionCost())return; S.player.guards+=10; S.player.stats.gold=clamp(S.player.stats.gold-50,0,999); log('Recruited 10 guards.'); render_kingdom();});
+  on('click','[data-action="kg:advisor"]',t=>{sfx('click');if(!actionCost())return; const adv=pick(['Master of Coin','Spymaster','High Seneschal','Witch-Hunter Liaison','Bladesmaster']); if(!S.player.advisors.includes(adv))S.player.advisors.push(adv); log('Appointed '+adv+'.'); render_kingdom();});
+  on('click','[data-action="kg:defense"]',t=>{sfx('click');if(!actionCost())return; S.player.defense=clamp(S.player.defense+15,0,200); S.player.stats.gold=clamp(S.player.stats.gold-40,0,999); log('Castle defenses strengthened.'); render_kingdom();});
+  on('click','[data-action^="council:"]',t=>{
+    sfx('click'); if(!actionCost())return;
+    const parts=t.dataset.action.split(':'); const petId=parts[1];
+    const eff={gold:parseInt(parts[2])||0,blood:parseInt(parts[3])||0,stability:parseInt(parts[4])||0,loyalty:parseInt(parts[5])||0};
+    const p=S.player.stats; for(const k in eff)p[k]=clamp(p[k]+eff[k],0,999);
+    const pet=S.council.petitions.find(x=>x.id===petId); if(pet)pet.resolved=true;
+    log('Council petition resolved: '+pet.title+'.');
+    render_kingdom();
+  });
+
+  /* ===== world ===== */
+  function render_world(){
+    let html=`<div class="screen active"><div class="hdr"><div class="title">World</div><div class="btn-back" data-action="screen:main">Back</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>Factions</h2>
+      <div class="row"><div class="stat"><span class="v">${S.factions.house.length}</span><span class="l">houses</span></div><div class="stat"><span class="v">${S.factions.pack.length}</span><span class="l">packs</span></div><div class="stat"><span class="v">${S.factions.coven.length}</span><span class="l">covens</span></div><div class="stat"><span class="v">${S.factions.village.length}</span><span class="l">villages</span></div><div class="stat"><span class="v">${S.factions.hunter.filter(x=>x.active).length}</span><span class="l">hunter groups</span></div></div>
+      <div style="margin-top:6px;"><div class="btn" data-action="wr:diplomacy">Diplomacy</div><div class="btn" data-action="wr:war">Command War</div><div class="btn" data-action="wr:espionage">Espionage</div><div class="btn" data-action="wr:trade">Trade</div></div>
+      <div style="margin-top:8px;"><h3>Rival Powers</h3>${factionList(S.factions.house,'house')}${factionList(S.factions.pack,'pack')}${factionList(S.factions.coven,'coven')}${factionList(S.factions.village,'village')}${factionList(S.factions.hunter,'hunter')}</div></div>
+      <div class="panel center"><div class="btn full" data-action="screen:main">Return</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+  function factionList(arr,type){
+    const lbl={house:'Houses',pack:'Packs',coven:'Covens',village:'Villages',hunter:'Hunters'}[type];
+    return arr.map(f=>`<div class="card"><div class="info"><div class="name">${escapeHtml(f.name)}</div><div class="sub">${f.leader} &bull; stance ${f.stance!=='undefined'?f.stance:'hostile'} &bull; power ${f.power||f.threat||f.blood||0}</div></div></div>`).join('');
+  }
+  on('click','[data-action="wr:diplomacy"]',t=>{sfx('click');if(!actionCost())return; const f=pick([...S.factions.house,...S.factions.pack,...S.factions.coven]); f.stance='allied'; S.player.allies.push(f.name); log('Allied with '+f.name+'.'); render_world();});
+  on('click','[data-action="wr:war"]',t=>{sfx('click');if(!actionCost())return; const f=pick(S.factions.house); const win=chance(.5+(S.player.defense/1000));
+    if(win){S.player.stats.gold=clamp(S.player.stats.gold+100,0,999); S.player.enemies=S.player.enemies.filter(x=>x!==f.name); log('You defeated '+f.name+'.');}else{ S.player.stats.health=clamp(S.player.stats.health-20,0,100); S.player.stats.gold=clamp(S.player.stats.gold-80,0,999); S.player.enemies.push(f.name); log('War with '+f.name+' went badly. Casualties.'); } render_world();});
+  on('click','[data-action="wr:espionage"]',t=>{sfx('click');if(!actionCost())return; gain('reputation',-5); log('Espionage stirs the shadows.'); render_world();});
+  on('click','[data-action="wr:trade"]',t=>{sfx('click');if(!actionCost())return; gain('gold',60); gain('blood',10); log('Trade brings gold and blood.'); render_world();});
+
+  /* ===== character sheet ===== */
+  function render_character(){
+    const p=S.player;
+    let html=`<div class="screen active"><div class="hdr"><div class="title">Character</div><div class="btn-back" data-action="screen:main">Back</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>Sheet</h2>
+      <div class="portrait-wrap" style="text-align:center;margin:8px 0;">
+        <div class="portrait"><img src="${p.portrait||portraitSVG(p)}" alt=""></div>
+        <div class="label">${escapeHtml(p.name)} &bull; ${p.title} of ${escapeHtml(p.house)}</div>
+      </div>
+      <div class="row"><div class="col"><label>Gender</label><div style="font-size:13px;color:var(--gold-light)">${p.gender}</div></div><div class="col"><label>Age</label><div style="font-size:13px;color:var(--gold-light)">${p.age}</div></div></div>
+      <div class="row"><div class="col"><label>Looks</label><div style="font-size:12px;color:var(--text-dim)">${p.looks.hair} hair, ${p.looks.eyes} eyes, ${p.looks.skin} skin</div></div><div class="col"><label>Power</label><div style="font-size:13px;color:var(--gold-light)">${p.power}</div></div></div>
+      <div style="margin-top:6px;"><label>Personality</label><div style="margin-top:4px;">${p.personality.map(x=>`<span class="tag">${x}</span>`).join('')||'<span style="font-size:11px;color:var(--text-dim)">none chosen</span>'}</div></div>
+      <div style="margin-top:6px;"><label>Inventory</label><div style="margin-top:4px;">${p.inventory.map(x=>`<span class="tag">${x}</span>`).join('')||'<span style="font-size:11px;color:var(--text-dim)">empty</span>'}</div></div>
+      <div style="margin-top:6px;"><label>Spouse</label><div style="font-size:13px;color:var(--gold-light)">${p.spouse?escapeHtml(npcById(p.spouse)?.name||p.spouse):'None'}</div></div>
+      <div style="margin-top:6px;"><label>Lovers / Consorts</label><div style="font-size:12px;color:var(--text-dim)">${p.lovers.map(id=>escapeHtml(npcById(id)?.name||id)).join(', ')||'None'}</div></div>
+      </div>
+      <div class="panel center"><div class="btn full" data-action="screen:main">Return</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+
+  /* ===== succession ===== */
+  function render_succession(){
+    const adults=S.heirs.filter(h=>!h.dead&&h.adult);
+    let html=`<div class="screen active"><div class="hdr"><div class="title">Succession</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>${S.player.dead?'The Night Has Ended':'You Abdicate'}</h2>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${S.player.dead?escapeHtml(S.player.name)+' has passed.':'You lay down the crown.'}</div>
+      ${adults.length?`<div style="font-size:12px;color:var(--text-dim);">Choose an heir to continue the bloodline.</div>
+        <div class="list">${adults.map(h=>`<div class="card"><div class="mini"><img src="${h.portrait||portraitSVG({gender:h.gender,hair:h.looks.hair,eyes:h.looks.eyes,skin:h.looks.skin,age:h.age})}" alt=""></div>
+          <div class="info"><div class="name">${escapeHtml(h.name)}</div><div class="sub">${h.age} yrs &bull; ${h.type}</div></div>
+          <div class="acts"><div class="btn small primary" data-action="succ:accept:${h.id}">Accept</div></div></div>`).join('')}</div>`:
+        `<div style="font-size:12px;color:var(--text-dim);">No adult heir. The dynasty ends here.</div>
+         <div class="btn full" data-action="game:new">Start Anew</div>`}
+      </div>
+      <div class="panel center"><div class="btn full" data-action="game:new">New Dynasty</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+  on('click','[data-action^="succ:accept:"]',t=>{
+    sfx('click'); const h=S.heirs.find(x=>x.id===t.dataset.action.split(':')[2]);
+    const old=S.player.name;
+    S.player=JSON.parse(JSON.stringify(h)); S.player.id=uid(); S.player.dead=false; S.player.abdicated=false;
+    S.player.reignStart=S.night; S.player.stats.gold=clamp(S.player.stats.gold+200,0,999);
+    S.actionsLeft=S.maxActions;
+    log('Succession: '+h.name+' takes the throne after '+old+'. The bloodline continues.');
+    saveState('manual'); show('main');
+  });
+
+  /* ===== saves ===== */
+  function render_saves(){
+    const slots=trySlots();
+    let html=`<div class="screen active"><div class="hdr"><div class="title">Saves</div><div class="btn-back" data-action="screen:splash">Back</div></div>
+    <div style="padding:0 10px 10px;">
+      <div class="panel"><h2>Save Slots</h2>
+      ${slots.map(s=>`<div class="card"><div class="info"><div class="name">${s}</div><div class="sub">saved night ${getSlotNight(s)}</div></div>
+        <div class="acts"><div class="btn small" data-action="save:load:${s}">Load</div><div class="btn small" data-action="save:del:${s}">Del</div></div></div>`).join('')||'<div style="font-size:11px;color:var(--text-dim)">No saves yet.</div>'}
+      <div style="margin-top:8px;"><div class="btn" data-action="save:load:autosave">Load Autosave</div><div class="btn" data-action="save:export">Export Save</div><div class="btn" data-action="save:import">Import Save</div></div>
+      <div style="margin-top:8px;"><input type="file" id="imp_file" accept=".json" style="display:none;"><div class="btn" data-action="imp:pick">Choose File</div></div>
+      </div>
+      <div class="panel center"><div class="btn full" data-action="game:new">New Game</div></div>
+    </div></div><div id="toast"></div>`;
+    $('#app').innerHTML=html;
+  }
+  function trySlots(){try{return JSON.parse(localStorage.getItem('bn_slots')||'[]');}catch(e){return [];}}
+  function getSlotNight(s){try{const p=JSON.parse(localStorage.getItem('bn_save_'+s)); return p&&p.night?p.night:'?';}catch(e){return '?';}}
+  on('click','[data-action^="save:load:"]',t=>{sfx('click');const s=t.dataset.action.split(':')[2]; if(loadState(s)){toast('Loaded '+s); show('main');}else toast('Load failed');});
+  on('click','[data-action^="save:del:"]',t=>{sfx('click');const s=t.dataset.action.split(':')[2]; localStorage.removeItem('bn_save_'+s); render_saves();});
+  on('click','[data-action="save:export"]',t=>{sfx('click');exportGame();});
+  on('click','[data-action="save:import"]',t=>{sfx('click');$('#imp_file').click();});
+  on('change','#imp_file',t=>{if(t.files[0])importGame(t.files[0]);});
+  on('click','[data-action="imp:pick"]',t=>{sfx('click');$('#imp_file').click();});
+  on('click','[data-action="game:new"]',t=>{sfx('click');newGame();});
+
+  /* ===== escape ===== */
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));}
+
+  /* ===== boot ===== */
+  render_splash();
+  if(S.settings.music)setTimeout(musicLoop,1000);
+
+  // expose render for router
+  window.render=render; window.show=show;
+})();
+</script>
+</body>
+</html>
